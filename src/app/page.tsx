@@ -94,7 +94,6 @@ export default function Home() {
 
     await fetchAudienceInfo(productResult);
   };
-
   interface ParsedData {
     [key: string]: string[];
   }
@@ -105,12 +104,15 @@ export default function Home() {
     let match: RegExpExecArray | null;
 
     while ((match = regex.exec(data)) !== null) {
-      const title = match[1].trim();
-      const details = match[2].trim();
-      result[title] = details
+      // Remove colons from the title
+      const title = match[1].trim().replace(/:$/, '');
+      // Remove colons from details and split into lines
+      const details = match[2]
+        .trim()
         .split('\n')
         .filter((line) => line.trim() !== '')
-        .map((line) => line.trim());
+        .map((line) => line.trim().replace(/:$/, ''));
+      result[title] = details;
     }
 
     return result;

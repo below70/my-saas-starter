@@ -35,13 +35,8 @@ export async function POST(request: Request): Promise<Response> {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4',
+          model: 'ft:gpt-4o-mini-2024-07-18:personal:target-genie-3:Ae6QKNRP',
           messages: [
-            {
-              role: 'system',
-              content:
-                'You are an expert marketing assistant specializing in creating effective ad targeting strategies for Meta and TikTok. Always format your response clearly and include titles enclosed in double asterisks (e.g., **Title**).',
-            },
             {
               role: 'user',
               content: `
@@ -49,15 +44,7 @@ export async function POST(request: Request): Promise<Response> {
                   simplifiedProductData,
                 )}.
                 
-                Your response should include the following sections, each with a title enclosed in double asterisks (e.g., **Title**):
-                - **Ideal Audience Demographics**: Include details like age, gender, location, and income level.
-                - **Psychographics**: Include interests, hobbies, and behaviors of the target audience.
-                - **Specific Interests and Behaviors on Meta and TikTok**: Provide platform-specific insights.
-                - **Suggestions for Ad Content and Tone for TikTok**: Include creative ideas for TikTok ads.
-                - **Suggestions for Ad Content and Tone for Meta**: Include creative ideas for Meta ads.
-                - **Example Call-to-Action (CTA) Phrases**: Provide suitable CTA phrases for both platforms.
                 
-                Ensure each section begins with the corresponding title enclosed in double asterisks, followed by the relevant content.
               `,
             },
           ],
