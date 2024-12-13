@@ -62,7 +62,6 @@ export async function POST(request: Request): Promise<Response> {
             },
           ],
           max_tokens: 1000,
-          stream: true,
         }),
       },
     );
