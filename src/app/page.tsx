@@ -2,10 +2,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, Col, Input, Layout, Row, Space, Table, Typography } from 'antd';
+import {
+  Card,
+  Col,
+  Input,
+  Layout,
+  Row,
+  Space,
+  Table,
+  Typography,
+  Modal,
+} from 'antd';
 
-const { Header, Content, Footer } = Layout;
-const { Title, Paragraph } = Typography;
+const { Header, Content } = Layout;
+const { Title, Paragraph, Text } = Typography;
 
 export default function Home() {
   const [url, setUrl] = useState<string>('');
@@ -13,6 +23,9 @@ export default function Home() {
   const [audienceResult, setAudienceResult] = useState<string | null>(null);
   const [loadingFetch, setLoadingFetch] = useState<boolean>(false);
   const [loadingAudience, setLoadingAudience] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const extractProductId = (url: string): string | null => {
     const regex = /item\/(\d+)/;
@@ -58,7 +71,6 @@ export default function Home() {
       }
 
       const data = await response.json();
-      console.log('Audience data:', data);
       setAudienceResult(
         data.choices?.[0]?.message?.content || 'No audience data returned.',
       );
@@ -94,6 +106,66 @@ export default function Home() {
 
     await fetchAudienceInfo(productResult);
   };
+
+  const handleSubscribe = async (): Promise<void> => {
+    try {
+      if (!phone) {
+        alert('Please enter your phone number.');
+        return;
+      }
+      if (!email) {
+        alert('Please enter your email.');
+        return;
+      }
+      const phoneWithCountryCodeRegex = /^\+\d{1,4}\d{9,14}$/;
+      if (!phoneWithCountryCodeRegex.test(phone)) {
+        alert(
+          'Please enter a valid phone number with the country code (e.g., +1234567890).',
+        );
+        return;
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address.');
+        return;
+      }
+
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          phone,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to subscribe.');
+      }
+
+      alert('Successfully subscribed!');
+      setEmail('');
+      setPhone('');
+
+      setModalVisible(false);
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  const showSubscribeModal = (): void => {
+    setModalVisible(true);
+  };
+
+  const handleModalCancel = (): void => {
+    setModalVisible(false);
+  };
+
   interface ParsedData {
     [key: string]: string[];
   }
@@ -123,10 +195,42 @@ export default function Home() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ backgroundColor: '#001529', padding: '20px' }}>
-        <Title style={{ color: '#fff', margin: 0 }} level={3}>
-          AliExpress Audience Tool
-        </Title>
+      <Header
+        style={{
+          backgroundColor: '#001529', // Ant Design primary color
+          padding: '12px 16px',
+          boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)', // Subtle shadow at the top
+          display: 'flex',
+          justifyContent: 'center',
+          width: '100%',
+          textAlign: 'center',
+          zIndex: 1000,
+        }}>
+        <Row align="middle" justify="center">
+          <Title
+            level={3}
+            style={{
+              color: '#ffffff', // White text for contrast
+              margin: 0,
+              fontSize: '16px', // Default font size for mobile
+            }}>
+            AliExpress Target Audience Generator
+          </Title>
+          <Text
+            style={{
+              color: '#ffffff', // White text for contrast
+              marginLeft: 10,
+              fontSize: '16px', // Default font size for mobile
+            }}>
+            By{' '}
+            <a
+              href="https://klikdex.com"
+              target="_blank"
+              rel="noopener noreferrer">
+              Klikdex Digital Agency
+            </a>
+          </Text>
+        </Row>
       </Header>
 
       <Content style={{ padding: '50px' }}>
@@ -164,7 +268,7 @@ export default function Home() {
                     cursor: loadingFetch ? 'not-allowed' : 'pointer',
                     width: '100%',
                   }}>
-                  {loadingFetch ? 'Getting Info' : 'Get Info'}
+                  {loadingFetch ? 'Getting Info...' : 'Get Info'}
                 </button>
               </Space>
 
@@ -241,19 +345,46 @@ export default function Home() {
                     bordered
                     style={{ fontSize: '12px' }}
                   />
+                  <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <button
+                      style={{
+                        marginTop: '10px',
+                        borderRadius: '4px',
+                        backgroundColor: '#1890ff',
+                        color: '#fff',
+                        padding: '10px 16px',
+                        border: 'none',
+                        cursor: loadingAudience ? 'not-allowed' : 'pointer',
+                        width: '100%',
+                      }}
+                      onClick={showSubscribeModal}>
+                      Subscribe to See More
+                    </button>
+                  </div>
                 </Card>
               )}
             </Card>
           </Col>
         </Row>
-      </Content>
 
-      <Footer style={{ textAlign: 'center' }}>
-        Designed By{' '}
-        <a href="https://klikdex.com" target="_blank" rel="noopener noreferrer">
-          Klikdex Digital Agency
-        </a>
-      </Footer>
+        <Modal
+          title="Subscribe for Better Results"
+          open={modalVisible}
+          onOk={handleSubscribe}
+          onCancel={handleModalCancel}>
+          <Input
+            placeholder="Enter your Phone Number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            style={{ marginBottom: '10px' }}
+          />
+          <Input
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </Modal>
+      </Content>
     </Layout>
   );
 }
