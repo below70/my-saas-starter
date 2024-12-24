@@ -13,6 +13,8 @@ import {
   Typography,
   Modal,
 } from 'antd';
+import { parseStrategies } from '@/utils';
+import { ColumnsType } from 'antd/es/table';
 
 const { Header, Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -26,6 +28,25 @@ export default function Home() {
   const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+  const detailsColumns: ColumnsType<{ detail: string }> = [
+    {
+      title: 'Details',
+      dataIndex: 'detail',
+      key: 'detail',
+      render: (text) => <span style={{ fontSize: '14px' }}>{text}</span>,
+    },
+  ];
+
+  // Columns for the "Key Tactics" table
+  const tacticsColumns: ColumnsType<{ tactic: string }> = [
+    {
+      title: 'Key Tactics',
+      dataIndex: 'tactic',
+      key: 'tactic',
+      render: (text) => <span style={{ fontSize: '14px' }}>{text}</span>,
+    },
+  ];
 
   const extractProductId = (url: string): string | null => {
     const regex = /item\/(\d+)/;
@@ -166,67 +187,46 @@ export default function Home() {
     setModalVisible(false);
   };
 
-  interface ParsedData {
-    [key: string]: string[];
-  }
+  const { strategies, additionalMetaDetails, additionalTikTokDetails } =
+    parseStrategies(audienceResult || '');
 
-  const parseDynamicData = (data: string): ParsedData => {
-    const regex = /\*\*(.*?)\*\*([\s\S]*?)(?=\*\*|$)/g;
-    const result: ParsedData = {};
-    let match: RegExpExecArray | null;
-
-    while ((match = regex.exec(data)) !== null) {
-      // Remove colons from the title
-      const title = match[1].trim().replace(/:$/, '');
-      // Split details into rows, removing unwanted characters
-      const details = match[2]
-        .trim()
-        .split('\n')
-        .filter((line) => line.trim() !== '')
-        .map(
-          (line) => line.trim().replace(/^[:,\-\s]+/, ''), // Remove leading ':', '-', or whitespace
-        )
-        .join('\n'); // Join details with a newline character for rows
-      result[title] = [details];
-    }
-
-    return result;
-  };
+  console.log('strategies:', strategies);
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh', backgroundColor: '#f5f7fa' }}>
       <Header
         style={{
-          backgroundColor: '#001529', // Ant Design primary color
-          padding: '12px 16px',
-          boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)', // Subtle shadow at the top
+          background: 'linear-gradient(90deg, #001529 0%, #004080 100%)',
+          padding: '16px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
           display: 'flex',
           justifyContent: 'center',
-          width: '100%',
-          textAlign: 'center',
           zIndex: 1000,
         }}>
         <Row align="middle" justify="center">
           <Title
             level={3}
             style={{
-              color: '#ffffff', // White text for contrast
+              color: '#ffffff',
               margin: 0,
-              fontSize: '16px', // Default font size for mobile
+              fontSize: '20px',
+              fontWeight: '600',
             }}>
             AliExpress Target Audience Generator
           </Title>
           <Text
             style={{
-              color: '#ffffff', // White text for contrast
-              marginLeft: 10,
-              fontSize: '16px', // Default font size for mobile
+              color: '#ffffff',
+              marginLeft: '10px',
+              fontSize: '14px',
+              fontStyle: 'italic',
             }}>
             By{' '}
             <a
               href="https://klikdex.com"
               target="_blank"
-              rel="noopener noreferrer">
+              rel="noopener noreferrer"
+              style={{ color: '#f0f0f0', textDecoration: 'underline' }}>
               Klikdex Digital Agency
             </a>
           </Text>
@@ -238,13 +238,16 @@ export default function Home() {
           <Col xs={24} sm={18} md={16} lg={12}>
             <Card
               style={{
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                background: '#ffffff',
               }}>
-              <Title level={2} style={{ textAlign: 'center' }}>
+              <Title
+                level={2}
+                style={{ textAlign: 'center', fontWeight: '700' }}>
                 Generate Your Target Audience
               </Title>
-              <Paragraph style={{ textAlign: 'center' }}>
+              <Paragraph style={{ textAlign: 'center', color: '#555' }}>
                 Paste the AliExpress product URL below and click &quot;Get
                 Info&quot; to generate a target audience for your ads on Meta
                 and TikTok.
@@ -254,19 +257,27 @@ export default function Home() {
                   placeholder="Paste your AliExpress product URL here"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  style={{ borderRadius: '4px' }}
+                  style={{
+                    borderRadius: '8px',
+                    padding: '12px',
+                    border: '1px solid #d9d9d9',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                  }}
                 />
                 <button
                   onClick={handleGetInfo}
                   disabled={loadingFetch}
                   style={{
-                    borderRadius: '4px',
-                    backgroundColor: '#1890ff',
+                    borderRadius: '8px',
+                    background:
+                      'linear-gradient(90deg, #1890ff 0%, #40a9ff 100%)',
                     color: '#fff',
-                    padding: '10px 16px',
+                    padding: '12px 16px',
                     border: 'none',
+                    fontWeight: '600',
                     cursor: loadingFetch ? 'not-allowed' : 'pointer',
                     width: '100%',
+                    transition: 'all 0.3s ease',
                   }}>
                   {loadingFetch ? 'Getting Info...' : 'Get Info'}
                 </button>
@@ -276,10 +287,13 @@ export default function Home() {
                 <Card
                   style={{
                     marginTop: '20px',
-                    borderRadius: '8px',
-                    backgroundColor: '#f6f6f6',
+                    borderRadius: '12px',
+                    background: '#f6f6f6',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
                   }}>
-                  <Title level={4}>Product Details:</Title>
+                  <Title level={4} style={{ color: '#333' }}>
+                    Product Details:
+                  </Title>
                   <Paragraph>
                     <b>Title:</b> {productResult.item?.title}
                   </Paragraph>
@@ -295,13 +309,16 @@ export default function Home() {
                     disabled={loadingAudience}
                     style={{
                       marginTop: '10px',
-                      borderRadius: '4px',
-                      backgroundColor: '#1890ff',
+                      borderRadius: '8px',
+                      background:
+                        'linear-gradient(90deg, #52c41a 0%, #73d13d 100%)',
                       color: '#fff',
-                      padding: '10px 16px',
+                      padding: '12px 16px',
                       border: 'none',
+                      fontWeight: '600',
                       cursor: loadingAudience ? 'not-allowed' : 'pointer',
                       width: '100%',
+                      transition: 'all 0.3s ease',
                     }}>
                     {loadingAudience
                       ? 'Generating Audience Info...'
@@ -314,48 +331,118 @@ export default function Home() {
                 <Card
                   style={{
                     marginTop: '20px',
-                    borderRadius: '8px',
-                    backgroundColor: '#f9f9f9',
+                    borderRadius: '12px',
+                    background: '#f9f9f9',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
                   }}>
-                  <Title level={4}>Audience Insights</Title>
-                  <Table
-                    dataSource={Object.entries(
-                      parseDynamicData(audienceResult),
-                    ).map(([key, value]) => ({
-                      key,
-                      category: key,
-                      details: value.join(', '),
-                    }))}
-                    columns={[
-                      {
-                        title: 'Category',
-                        dataIndex: 'category',
-                        key: 'category',
-                        render: (text) => (
-                          <span style={{ fontSize: '12px' }}>{text}</span>
-                        ),
-                      },
-                      {
-                        title: 'Details',
-                        dataIndex: 'details',
-                        key: 'details',
-                      },
-                    ]}
-                    pagination={false}
-                    bordered
-                    style={{ fontSize: '12px' }}
-                  />
+                  <Title level={4} style={{ color: '#333' }}>
+                    Audience Insights
+                  </Title>
+
+                  <div>
+                    {/* Loop over each strategy */}
+                    {strategies.map((strategy) => (
+                      <div
+                        key={strategy.strategyName}
+                        style={{ marginBottom: '3rem' }}>
+                        <h3
+                          style={{ fontSize: '18px', marginBottom: '0.5rem' }}>
+                          {strategy.strategyName} {strategy.title}
+                        </h3>
+
+                        {/* Details Table */}
+                        {!!strategy.details.length && (
+                          <div style={{ marginBottom: '1.5rem' }}>
+                            <Table
+                              dataSource={strategy.details.map((d, index) => ({
+                                key: index,
+                                detail: d,
+                              }))}
+                              columns={detailsColumns}
+                              pagination={false}
+                              bordered
+                              size="small"
+                            />
+                          </div>
+                        )}
+
+                        {/* Key Tactics Table */}
+                        {!!strategy.keyTactics.length && (
+                          <div>
+                            <Table
+                              dataSource={strategy.keyTactics.map(
+                                (t, index) => ({
+                                  key: index,
+                                  tactic: t,
+                                }),
+                              )}
+                              columns={tacticsColumns}
+                              pagination={false}
+                              bordered
+                              size="small"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Additional Meta Details */}
+                    {additionalMetaDetails.length > 0 && (
+                      <div style={{ marginBottom: '2rem' }}>
+                        <h3
+                          style={{ fontSize: '18px', marginBottom: '0.5rem' }}>
+                          Additional Meta
+                        </h3>
+                        <Table
+                          dataSource={additionalMetaDetails.map((m, index) => ({
+                            key: index,
+                            detail: m,
+                          }))}
+                          columns={detailsColumns}
+                          pagination={false}
+                          bordered
+                          size="small"
+                        />
+                      </div>
+                    )}
+
+                    {/* Additional TikTok Details */}
+                    {additionalTikTokDetails.length > 0 && (
+                      <div style={{ marginBottom: '2rem' }}>
+                        <h3
+                          style={{ fontSize: '18px', marginBottom: '0.5rem' }}>
+                          Additional TikTok
+                        </h3>
+                        <Table
+                          dataSource={additionalTikTokDetails.map(
+                            (t, index) => ({
+                              key: index,
+                              detail: t,
+                            }),
+                          )}
+                          columns={detailsColumns}
+                          pagination={false}
+                          bordered
+                          size="small"
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   <div style={{ marginTop: '20px', textAlign: 'center' }}>
                     <button
                       style={{
                         marginTop: '10px',
-                        borderRadius: '4px',
-                        backgroundColor: '#1890ff',
+                        borderRadius: '8px',
+                        background:
+                          'linear-gradient(90deg, #fa541c 0%, #ff7a45 100%)',
                         color: '#fff',
-                        padding: '10px 16px',
+                        padding: '12px 16px',
                         border: 'none',
-                        cursor: loadingAudience ? 'not-allowed' : 'pointer',
+                        fontWeight: '600',
+                        cursor: 'pointer',
                         width: '100%',
+                        transition: 'all 0.3s ease',
                       }}
                       onClick={showSubscribeModal}>
                       Subscribe to See More
@@ -371,18 +458,30 @@ export default function Home() {
           title="Subscribe for Better Results"
           open={modalVisible}
           onOk={handleSubscribe}
-          onCancel={handleModalCancel}>
-          <Input
-            placeholder="Enter your Phone Number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            style={{ marginBottom: '10px' }}
-          />
-          <Input
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          onCancel={handleModalCancel}
+          centered>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Input
+              placeholder="Enter your Phone Number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              style={{
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid #d9d9d9',
+              }}
+            />
+            <Input
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid #d9d9d9',
+              }}
+            />
+          </Space>
         </Modal>
       </Content>
     </Layout>

@@ -35,7 +35,7 @@ export async function POST(request: Request): Promise<Response> {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'ft:gpt-4o-mini-2024-07-18:personal:target-genie-3:Ae6QKNRP',
+          model: 'ft:gpt-4o-mini-2024-07-18:personal:target-genie-5:Ahf26gFD',
           messages: [
             {
               role: 'user',
