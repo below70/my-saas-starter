@@ -15,6 +15,7 @@ import {
 } from 'antd';
 import { parseStrategies } from '@/utils';
 import { ColumnsType } from 'antd/es/table';
+import { logCustomEvent } from '@/utils/firebaseConfig';
 
 const { Header, Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -57,15 +58,19 @@ export default function Home() {
   const fetchProductInfo = async (productId: string) => {
     try {
       setLoadingFetch(true);
+      logCustomEvent('fetch_product_info', { productId });
       const response = await fetch(
         `/api/fetchProductFromAliExpress?productId=${productId}`,
       );
       if (!response.ok) {
+        const errorText = await response.text();
+        logCustomEvent('fetch_product_info_not_okay', { error: errorText });
         throw new Error('Failed to fetch product information');
       }
       const data = await response.json();
       setProductResult(data.result);
     } catch (error: any) {
+      logCustomEvent('fetch_product_info_error', { error: error.message });
       alert(error.message);
     } finally {
       setLoadingFetch(false);
@@ -75,6 +80,7 @@ export default function Home() {
   const fetchAudienceInfo = async (productData: any) => {
     try {
       setLoadingAudience(true);
+      logCustomEvent('fetch_audience_info', { productData });
       const response = await fetch('/api/sendToChatGPT', {
         method: 'POST',
         headers: {
@@ -85,6 +91,7 @@ export default function Home() {
 
       if (!response.ok) {
         const errorText = await response.text();
+        logCustomEvent('fetch_audience_info_not_okay', { error: errorText });
         console.error('Server API error:', errorText);
         throw new Error(
           `Failed to fetch audience information: ${response.statusText}`,
@@ -97,6 +104,7 @@ export default function Home() {
       );
     } catch (error: any) {
       console.error('Error:', error.message);
+      logCustomEvent('fetch_audience_info_error', { error: error.message });
       alert(error.message);
     } finally {
       setLoadingAudience(false);
@@ -130,6 +138,7 @@ export default function Home() {
 
   const handleSubscribe = async (): Promise<void> => {
     try {
+      logCustomEvent('subscribe', { email, phone });
       if (!phone) {
         alert('Please enter your phone number.');
         return;
@@ -166,6 +175,7 @@ export default function Home() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        logCustomEvent('subscribe_not_okay', { error: errorData.message });
         throw new Error(errorData.message || 'Failed to subscribe.');
       }
 
@@ -175,6 +185,7 @@ export default function Home() {
 
       setModalVisible(false);
     } catch (error: any) {
+      logCustomEvent('subscribe_error', { error: error.message });
       alert(error.message);
     }
   };
@@ -190,7 +201,12 @@ export default function Home() {
   const { strategies, additionalMetaDetails, additionalTikTokDetails } =
     parseStrategies(audienceResult || '');
 
-  console.log('strategies:', strategies);
+  const handleLinkClick = () => {
+    logCustomEvent('klikdex_link_click', {
+      source: 'footer_text',
+      url: 'https://klikdex.com',
+    });
+  };
 
   return (
     <Layout style={{ minHeight: '100vh', backgroundColor: '#f5f7fa' }}>
@@ -226,7 +242,8 @@ export default function Home() {
               href="https://klikdex.com"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#f0f0f0', textDecoration: 'underline' }}>
+              style={{ color: '#f0f0f0', textDecoration: 'underline' }}
+              onClick={handleLinkClick}>
               Klikdex Digital Agency
             </a>
           </Text>
