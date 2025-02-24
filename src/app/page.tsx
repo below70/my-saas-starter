@@ -27,13 +27,9 @@ interface Strategy {
   tactics: string[];
 }
 
-interface AdditionalDetails {
-  isAdditional: true;
-  meta: string[];
-  tiktok: string[];
-}
-
-type ParsedStrategy = Strategy | AdditionalDetails;
+type ParsedStrategy =
+  | Strategy
+  | { isAdditional: boolean; meta: string[]; tiktok: string[] };
 
 export default function Home() {
   const [url, setUrl] = useState<string>('');
@@ -202,7 +198,7 @@ export default function Home() {
         );
 
         const demographics = demographicsMatches.map((match) => {
-          const [_, label, value] = match.match(/\*\*(.*?)\*\*: (.*)/) || [];
+          const [, label, value] = match.match(/\*\*(.*?)\*\*: (.*)/) || [];
           return { label, value };
         });
 
@@ -246,10 +242,10 @@ export default function Home() {
           : [],
       };
 
-      parsedStrategies.push(additionalDetails);
+      parsedStrategies.push(additionalDetails as any);
     }
 
-    return parsedStrategies;
+    return parsedStrategies as any;
   };
 
   console.log('productResult:', audienceResult);
@@ -261,42 +257,42 @@ export default function Home() {
           background: 'linear-gradient(135deg, #001529 0%, #003a75 100%)',
           padding: '16px',
           boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
-          display: 'flex',
-          justifyContent: 'center',
-          width: '100%',
-          textAlign: 'center',
-          zIndex: 1000,
+          backdropFilter: 'blur(10px)',
           position: 'sticky',
           top: 0,
+          zIndex: 1000,
         }}>
-        <Row align="middle" justify="center">
-          <Title
-            level={3}
-            style={{
-              color: '#ffffff', // White text for contrast
-              margin: 0,
-              fontSize: '16px', // Default font size for mobile
-            }}>
-            AliExpress Target Audience Generator
-          </Title>
-          <Text
-            style={{
-              color: '#ffffff', // White text for contrast
-              marginLeft: 10,
-              fontSize: '16px', // Default font size for mobile
-            }}>
-            By{' '}
-            <a
-              href="https://klikdex.com"
-              target="_blank"
-              rel="noopener noreferrer">
-              Klikdex Digital Agency
-            </a>
-          </Text>
+        <Row align="middle" justify="center" gutter={16}>
+          <Col>
+            <Title
+              level={3}
+              style={{
+                color: '#ffffff',
+                margin: 0,
+                fontSize: '20px',
+                fontWeight: 600,
+              }}>
+              AliExpress Target Audience Generator
+            </Title>
+          </Col>
+          <Col>
+            <Text
+              style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '16px' }}>
+              By{' '}
+              <a
+                href="https://klikdex.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#1890ff', fontWeight: 500 }}>
+                Klikdex Digital Agency
+              </a>
+            </Text>
+          </Col>
         </Row>
       </Header>
 
       <Content
+        className="glass-effect"
         style={{
           padding: '50px 20px',
           background: 'linear-gradient(135deg, #f6f8fa 0%, #f0f2f5 100%)',
@@ -305,24 +301,15 @@ export default function Home() {
         <Row justify="center">
           <Col xs={24} sm={20} md={18} lg={14}>
             <Card
+              className="hover-card glass-effect"
               style={{
                 borderRadius: '16px',
-                boxShadow: '0 8px 30px rgba(0, 21, 41, 0.07)',
                 border: 'none',
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.3s ease',
               }}>
               <Title
                 level={2}
-                style={{
-                  textAlign: 'center',
-                  marginBottom: '24px',
-                  background:
-                    'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}>
+                className="gradient-text"
+                style={{ textAlign: 'center', marginBottom: '24px' }}>
                 Generate Your Target Audience
               </Title>
               <Paragraph style={{ textAlign: 'center' }}>
@@ -332,39 +319,28 @@ export default function Home() {
               </Paragraph>
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Input
+                  className="custom-input"
                   placeholder="Paste your AliExpress product URL here"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   style={{
+                    height: '48px',
                     borderRadius: '8px',
-                    padding: '12px',
                     fontSize: '16px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                    border: '1px solid #e8e8e8',
-                    transition: 'all 0.3s ease',
                   }}
                 />
                 <button
                   onClick={handleGetInfo}
                   disabled={loadingFetch}
+                  className="gradient-button"
                   style={{
-                    borderRadius: '8px',
-                    background:
-                      'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
-                    color: '#fff',
-                    padding: '12px 24px',
-                    border: 'none',
-                    cursor: loadingFetch ? 'not-allowed' : 'pointer',
                     width: '100%',
+                    height: '48px',
+                    borderRadius: '8px',
                     fontSize: '16px',
                     fontWeight: 600,
-                    transition: 'all 0.3s ease',
-                    transform: 'translateY(0)',
-                    boxShadow: '0 4px 15px rgba(24, 144, 255, 0.2)',
-                    ':hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(24, 144, 255, 0.3)',
-                    },
+                    marginTop: '16px',
+                    color: '#fff',
                   }}>
                   {loadingFetch ? 'Getting Info...' : 'Get Info'}
                 </button>
@@ -372,13 +348,11 @@ export default function Home() {
 
               {productResult && (
                 <Card
+                  className="hover-card card-enter card-enter-active"
                   style={{
                     marginTop: '24px',
                     borderRadius: '12px',
-                    background:
-                      'linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%)',
                     border: 'none',
-                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
                   }}>
                   <Title level={4}>Product Details:</Title>
                   <Paragraph>
@@ -413,13 +387,11 @@ export default function Home() {
 
               {audienceResult && (
                 <Card
+                  className="hover-card card-enter card-enter-active"
                   style={{
                     marginTop: '24px',
                     borderRadius: '12px',
-                    background:
-                      'linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)',
                     border: 'none',
-                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
                   }}>
                   <Title level={4}>Marketing Strategies</Title>
                   {parseDynamicData(audienceResult).map((strategy, index) => (
@@ -445,13 +417,15 @@ export default function Home() {
                           borderTopRightRadius: '12px',
                         }}>
                         <Text strong style={{ fontSize: '16px' }}>
-                          {strategy.strategy}
+                          {'strategy' in strategy ? strategy.strategy : ''}
                         </Text>
                         <br />
-                        <Text type="secondary">{strategy.title}</Text>
+                        <Text type="secondary">
+                          {'title' in strategy ? strategy.title : ''}
+                        </Text>
                       </div>
 
-                      {strategy.demographics && (
+                      {'demographics' in strategy && (
                         <div style={{ marginBottom: '20px' }}>
                           <Text
                             strong
@@ -486,7 +460,7 @@ export default function Home() {
                         </div>
                       )}
 
-                      {strategy.tactics && (
+                      {'tactics' in strategy && (
                         <div>
                           <Text
                             strong
@@ -547,9 +521,9 @@ export default function Home() {
         <Modal
           title={
             <div
+              className="gradient-text"
               style={{
                 textAlign: 'center',
-                color: '#1890ff',
                 fontSize: '24px',
                 fontWeight: 600,
               }}>
@@ -561,15 +535,21 @@ export default function Home() {
           onCancel={handleModalCancel}
           okText="Subscribe"
           cancelText="Cancel"
-          style={{ top: 20 }}
+          className="custom-modal"
           styles={{
-            body: { padding: '24px' },
+            body: { padding: '32px' },
+            mask: { backdropFilter: 'blur(4px)' },
+            content: {
+              borderRadius: '16px',
+              overflow: 'hidden',
+            },
           }}
           okButtonProps={{
+            className: 'gradient-button',
             style: {
-              background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
-              border: 'none',
               borderRadius: '6px',
+              height: '40px',
+              fontWeight: 600,
             },
           }}>
           <Space direction="vertical" style={{ width: '100%' }}>
